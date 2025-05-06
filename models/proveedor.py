@@ -3,8 +3,8 @@ from typing import Optional
 
 @dataclass
 class Proveedor:
-    proveedor_id: Optional[int] = None
-    nombre: Optional[str] = None
+    proveedor_id: int
+    nombre: str
     empresa: Optional[str] = None
     telefono: Optional[str] = None
     direccion: Optional[str] = None

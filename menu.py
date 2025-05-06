@@ -11,7 +11,8 @@ class MenuApp:
         self.root.title(f"{Config.APP_TITLE} - {user.perfil.capitalize()}")
         self.root.geometry("800x500")
         self._create_widgets()
-    
+        root.deiconify()
+
     def _create_widgets(self):
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill='both', expand=True, padx=20, pady=20)

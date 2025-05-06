@@ -14,11 +14,10 @@ class Venta:
     total: float = 0.0
     puntos: int = 0
     descuento_id: Optional[int] = None
-    detalles: List[Dict] = None  # {'articulo_id': int, 'cantidad': int, 'precio_unitario': float}
 
     def validate(self) -> bool:
         if not all([self.fecha, self.usuario_id, self.cliente_id]):
             return False
-        if self.total <= 0 or not self.detalles:
+        if self.total <= 0:
             return False
         return True

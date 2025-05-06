@@ -74,3 +74,23 @@ class DescuentoDAO:
         except Error as e:
             print(f"Error al obtener descuentos por puntos: {e}")
             return []
+    
+    def get(self, descuento_id: int) -> Optional[DescuentoPuntos]:
+        query = "SELECT * FROM descuento_puntos WHERE descuentoid = %(descuento_id)s"
+        params = {'descuento_id': descuento_id}
+        
+        try:
+            self.connection.cursor.execute(query, params)
+            result = self.connection.cursor.fetchone()
+            
+            if result:
+                return DescuentoPuntos(
+                    descuento_id=result['descuentoid'],
+                    puntos_minimos=result['puntos_minimos'],
+                    puntos_maximos=result['puntos_maximos'],
+                    porcentaje_descuento=result['porcentaje_descuento']
+                )
+            return None
+        except Error as e:
+            print(f"Error al obtener descuento: {e}")
+            return None

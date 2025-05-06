@@ -115,14 +115,14 @@ class CompraForm(BaseForm):
             return
             
         proveedor_id = self.proveedores[proveedor_str]
-        articulos = self.articulo_dao.get_all()
+        self.articulos_disponibles = self.articulo_dao.get_by_proveedor(proveedor_id)
         
         self.articulo_combo['values'] = [
-            f"{a.articulo_id} - {a.descripcion} (${a.precio_venta:.2f})" 
-            for a in articulos
+            f"{a['articuloid']} - {a['descripcion']} (${a['precio_proveedor']:.2f}) - Stock: {a['existencias']}" 
+            for a in self.articulos_disponibles
         ]
         
-        if articulos:
+        if self.articulos_disponibles:
             self.articulo_combo.current(0)
     
     def _agregar_articulo(self):

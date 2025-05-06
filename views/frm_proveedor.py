@@ -19,43 +19,48 @@ class ProveedorForm(BaseForm):
         self._load_data()
     
     def _setup_permissions(self):
-        # Solo admin puede gestionar proveedores
         if self.user.perfil != 'admin':
+            self.show_error("No tiene permisos para acceder a esta sección")
             self.destroy()
             return
-        
-        # Si es gerente o cajero, solo lectura
-        if self.user.perfil in ['gerente', 'cajero'] and self.proveedor_id:
-            self.nombre_entry.config(state='readonly')
-            self.empresa_entry.config(state='readonly')
-            self.telefono_entry.config(state='readonly')
-            self.direccion_entry.config(state='readonly')
-            self.delete_btn.pack_forget()
 
     def _create_widgets(self):
         main_frame = self.create_frame(self)
         main_frame.columnconfigure(1, weight=1)
         
+        # Frame de búsqueda
+        search_frame = ttk.Frame(main_frame)
+        search_frame.grid(row=0, column=0, columnspan=2, sticky='ew', pady=5)
+        
+        ttk.Label(search_frame, text="Buscar por ID:").pack(side='left', padx=5)
+        self.search_entry = ttk.Entry(search_frame, width=10)
+        self.search_entry.pack(side='left', padx=5)
+        ttk.Button(
+            search_frame, 
+            text="Buscar", 
+            command=self._search_proveedor
+        ).pack(side='left', padx=5)
+        
         # Campos del formulario
-        ttk.Label(main_frame, text="Nombre:").grid(row=0, column=0, sticky='e', padx=5, pady=5)
+        ttk.Label(main_frame, text="Nombre:").grid(row=1, column=0, sticky='e', padx=5, pady=5)
         self.nombre_entry = ttk.Entry(main_frame)
-        self.nombre_entry.grid(row=0, column=1, sticky='ew', padx=5, pady=5)
+        self.nombre_entry.grid(row=1, column=1, sticky='ew', padx=5, pady=5)
         
-        ttk.Label(main_frame, text="Empresa:").grid(row=1, column=0, sticky='e', padx=5, pady=5)
+        ttk.Label(main_frame, text="Empresa:").grid(row=2, column=0, sticky='e', padx=5, pady=5)
         self.empresa_entry = ttk.Entry(main_frame)
-        self.empresa_entry.grid(row=1, column=1, sticky='ew', padx=5, pady=5)
+        self.empresa_entry.grid(row=2, column=1, sticky='ew', padx=5, pady=5)
         
-        ttk.Label(main_frame, text="Teléfono:").grid(row=2, column=0, sticky='e', padx=5, pady=5)
+        ttk.Label(main_frame, text="Teléfono:").grid(row=3, column=0, sticky='e', padx=5, pady=5)
         self.telefono_entry = ttk.Entry(main_frame)
-        self.telefono_entry.grid(row=2, column=1, sticky='ew', padx=5, pady=5)
+        self.telefono_entry.grid(row=3, column=1, sticky='ew', padx=5, pady=5)
         
-        ttk.Label(main_frame, text="Dirección:").grid(row=3, column=0, sticky='e', padx=5, pady=5)
+        ttk.Label(main_frame, text="Dirección:").grid(row=4, column=0, sticky='e', padx=5, pady=5)
         self.direccion_entry = ttk.Entry(main_frame)
-        self.direccion_entry.grid(row=3, column=1, sticky='ew', padx=5, pady=5)
+        self.direccion_entry.grid(row=4, column=1, sticky='ew', padx=5, pady=5)
         
         # Barra de botones
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=4, column=0, columnspan=2, sticky='e', pady=10)
+        button_frame.grid(row=5, column=0, columnspan=2, sticky='e', pady=10)
         
         self.delete_btn = ttk.Button(
             button_frame, 
@@ -75,6 +80,12 @@ class ProveedorForm(BaseForm):
             button_frame, 
             text="Cancelar", 
             command=self.destroy
+        ).pack(side='left', padx=5)
+        
+        ttk.Button(
+            button_frame, 
+            text="Limpiar", 
+            command=self._clear_form
         ).pack(side='left', padx=5)
         
         if self.proveedor_id:
@@ -139,3 +150,43 @@ class ProveedorForm(BaseForm):
                 self.destroy()
             else:
                 self.show_error("No se pudo eliminar el proveedor")
+    
+    def _clear_form(self):
+        """Limpia todos los campos del formulario"""
+        self.nombre_entry.delete(0, tk.END)
+        self.empresa_entry.delete(0, tk.END)
+        self.telefono_entry.delete(0, tk.END)
+        self.direccion_entry.delete(0, tk.END)
+        self.search_entry.delete(0, tk.END)
+        
+        self.proveedor_id = None
+        self.proveedor = None
+        self.delete_btn.pack_forget()
+
+    def _search_proveedor(self):
+        """Busca un proveedor por ID y carga sus datos"""
+        proveedor_id = self.search_entry.get().strip()
+        if not proveedor_id.isdigit():
+            messagebox.showerror("Error", "ID debe ser un número válido")
+            return
+        
+        proveedor_id = int(proveedor_id)
+        proveedor = self.dao.get(proveedor_id)
+        if not proveedor:
+            messagebox.showerror("Error", f"No se encontró proveedor con ID {proveedor_id}")
+            return
+        
+        # Cargar datos del proveedor encontrado
+        self.proveedor_id = proveedor_id
+        self.proveedor = proveedor
+        self.nombre_entry.delete(0, tk.END)
+        self.nombre_entry.insert(0, proveedor.nombre)
+        self.empresa_entry.delete(0, tk.END)
+        self.empresa_entry.insert(0, proveedor.empresa)
+        self.telefono_entry.delete(0, tk.END)
+        self.telefono_entry.insert(0, proveedor.telefono)
+        self.direccion_entry.delete(0, tk.END)
+        self.direccion_entry.insert(0, proveedor.direccion)
+        
+        self.delete_btn.pack(side='left', padx=5)
+        messagebox.showinfo("Éxito", f"Proveedor {proveedor.nombre} cargado correctamente")

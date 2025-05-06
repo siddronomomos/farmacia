@@ -11,18 +11,24 @@ class ArticuloDAO:
         if not articulo.validate():
             return False
             
-        query = """
-            INSERT INTO articulos (descripcion, precio_venta)
-            VALUES (%(descripcion)s, %(precio_venta)s)
-        """
-        params = {
-            'descripcion': articulo.descripcion,
-            'precio_venta': articulo.precio_venta
-        }
-        
         try:
-            self.connection.cursor.execute(query, params)
+            # Insert into articulos table
+            query_articulos = """
+                INSERT INTO articulos (descripcion, precio_venta)
+                VALUES (%s, %s)
+            """
+            params_articulos = (articulo.descripcion, articulo.precio_venta)
+            self.connection.cursor.execute(query_articulos, params_articulos)
             articulo.articulo_id = self.connection.cursor.lastrowid
+
+            # Insert into det_art table
+            query_det_art = """
+                INSERT INTO det_art (proveedorid, articuloid, precio, existencias)
+                VALUES (%s, %s, %s, 0)
+            """
+            params_det_art = (articulo.proveedor_id, articulo.articulo_id, articulo.precio_compra)
+            self.connection.cursor.execute(query_det_art, params_det_art)
+
             self.connection.commit()
             return True
         except Error as e:
@@ -34,20 +40,25 @@ class ArticuloDAO:
         if not articulo.validate() or not articulo.articulo_id:
             return False
             
-        query = """
-            UPDATE articulos
-            SET descripcion = %(descripcion)s,
-                precio_venta = %(precio_venta)s
-            WHERE articuloid = %(articulo_id)s
-        """
-        params = {
-            'articulo_id': articulo.articulo_id,
-            'descripcion': articulo.descripcion,
-            'precio_venta': articulo.precio_venta
-        }
-        
         try:
-            self.connection.cursor.execute(query, params)
+            # Update articulos table
+            query_articulos = """
+                UPDATE articulos
+                SET descripcion = %s, precio_venta = %s
+                WHERE articuloid = %s
+            """
+            params_articulos = (articulo.descripcion, articulo.precio_venta, articulo.articulo_id)
+            self.connection.cursor.execute(query_articulos, params_articulos)
+
+            # Update det_art table
+            query_det_art = """
+                UPDATE det_art
+                SET precio = %s, proveedorid = %s
+                WHERE articuloid = %s
+            """
+            params_det_art = (articulo.precio_compra, articulo.proveedor_id, articulo.articulo_id)
+            self.connection.cursor.execute(query_det_art, params_det_art)
+
             self.connection.commit()
             return self.connection.cursor.rowcount > 0
         except Error as e:
@@ -68,7 +79,12 @@ class ArticuloDAO:
             return False
     
     def get(self, articulo_id: int) -> Optional[Articulo]:
-        query = "SELECT * FROM articulos WHERE articuloid = %s"
+        query = """
+            SELECT a.articuloid, a.descripcion, a.precio_venta, a.precio_compra, a.proveedor_id, p.nombre
+            FROM articulos a
+            JOIN proveedor p ON a.proveedor_id = p.proveedor_id
+            WHERE a.articuloid = %s
+        """
         
         try:
             self.connection.cursor.execute(query, (articulo_id,))
@@ -78,7 +94,10 @@ class ArticuloDAO:
                 return Articulo(
                     articulo_id=result['articuloid'],
                     descripcion=result['descripcion'],
-                    precio_venta=result['precio_venta']
+                    precio_venta=result['precio_venta'],
+                    precio_compra=result['precio_compra'],
+                    proveedor_id=result['proveedor_id'],
+                    proveedor_nombre=result['nombre']
                 )
             return None
         except Error as e:
@@ -97,7 +116,9 @@ class ArticuloDAO:
                 articulos.append(Articulo(
                     articulo_id=result['articuloid'],
                     descripcion=result['descripcion'],
-                    precio_venta=result['precio_venta']
+                    precio_venta=result['precio_venta'],
+                    precio_compra=result['precio_compra'],
+                    proveedor_id=result['proveedor_id']
                 ))
             return articulos
         except Error as e:
@@ -135,3 +156,46 @@ class ArticuloDAO:
             print(f"Error al actualizar stock: {e}")
             self.connection.rollback()
             return False
+
+    def search(self, term: str):
+        query = """
+            SELECT a.articuloid AS articulo_id, a.descripcion, a.precio_venta, da.precio AS precio_compra
+            FROM articulos a
+            LEFT JOIN det_art da ON a.articuloid = da.articuloid
+            WHERE a.descripcion LIKE %(term)s
+        """
+        params = {'term': f"%{term}%"}
+        cursor = self.connection.cursor
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return [
+            {
+                'articulo_id': row['articulo_id'],
+                'descripcion': row['descripcion'],
+                'precio_venta': row['precio_venta'],
+                'precio_compra': row['precio_compra']
+            }
+            for row in rows
+        ]
+
+    def get_by_id(self, articulo_id: int):
+        query = """
+            SELECT a.articuloid AS articulo_id, a.descripcion, a.precio_venta, 
+                   da.precio AS precio_compra, da.proveedorid, p.nombre AS proveedor_nombre
+            FROM articulos a
+            LEFT JOIN det_art da ON a.articuloid = da.articuloid
+            LEFT JOIN proveedor p ON da.proveedorid = p.proveedorid
+            WHERE a.articuloid = %(articulo_id)s
+        """
+        params = {'articulo_id': articulo_id}
+        cursor = self.connection.cursor
+        cursor.execute(query, params)
+        row = cursor.fetchone()
+        return {
+            'articulo_id': row['articulo_id'],
+            'descripcion': row['descripcion'],
+            'precio_venta': row['precio_venta'],
+            'precio_compra': row['precio_compra'],
+            'proveedor_id': row['proveedorid'],
+            'proveedor_nombre': row['proveedor_nombre']
+        } if row else None

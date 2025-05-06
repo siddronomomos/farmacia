@@ -13,6 +13,7 @@ class LoginForm(BaseForm):
         self.dao = UserDAO()
         self._create_widgets()
         self._center_window()
+        self.bind("<Return>", lambda event: self._login())  # Bind Enter key to login
 
     def _create_widgets(self):
         main_frame = ttk.Frame(self, padding=20)
@@ -72,7 +73,10 @@ class LoginForm(BaseForm):
             if user and user.check_password(password):
                 self.destroy()
                 from menu import MenuApp
+                #show menu app on top when login is successful
+                
                 MenuApp(self.master, user)
+            
             else:
                 messagebox.showerror("Error", "Credenciales inválidas")
                 self.password_var.set('')

@@ -6,7 +6,7 @@ from db.connection import Connection
 class ProveedorDAO:
     def __init__(self):
         self.connection = Connection()
-    
+
     def save(self, proveedor: Proveedor) -> bool:
         if not proveedor.validate():
             return False
@@ -23,32 +23,42 @@ class ProveedorDAO:
         }
         
         try:
-            self.connection.cursor.execute(query, params)
-            proveedor.proveedor_id = self.connection.cursor.lastrowid
+            cursor = self.connection.cursor
+            cursor.execute(query, params)
+            proveedor.proveedor_id = cursor.lastrowid
             self.connection.commit()
             return True
         except Error as e:
             print(f"Error al guardar proveedor: {e}")
             self.connection.rollback()
             return False
-    
-    def get_all(self) -> List[Proveedor]:
-        query = "SELECT * FROM proveedor ORDER BY nombre"
-        proveedores = []
+
+    def get_all(self):
+        query = "SELECT proveedorid AS proveedor_id, nombre, empresa, direccion, telefono FROM proveedor ORDER BY proveedorid"
+        rows = self._execute_query(query)
+        return [Proveedor(proveedor_id=row['proveedor_id'], nombre=row['nombre'], empresa=row['empresa'], direccion=row['direccion'], telefono=row['telefono']) for row in rows]
+
+    def _execute_query(self, query: str, params: Optional[dict] = None) -> List[dict]:
+        cursor = self.connection.cursor
+        if params:
+            cursor.execute(query, params)
+        else:
+            cursor.execute(query)
+        rows = cursor.fetchall()
+        return rows
         
-        try:
-            self.connection.cursor.execute(query)
-            results = self.connection.cursor.fetchall()
-            
-            for result in results:
-                proveedores.append(Proveedor(
-                    proveedor_id=result['proveedorid'],
-                    nombre=result['nombre'],
-                    empresa=result['empresa'],
-                    direccion=result['direccion'],
-                    telefono=result['telefono']
-                ))
-            return proveedores
-        except Error as e:
-            print(f"Error al obtener proveedores: {e}")
-            return []
+    def get(self, proveedor_id: int) -> Optional[Proveedor]:
+        query = "SELECT * FROM proveedor WHERE proveedorid = %(proveedorid)s"
+        params = {'proveedorid': proveedor_id}
+        rows = self._execute_query(query, params)
+        
+        if rows:
+            row = rows[0]
+            return Proveedor(
+                proveedor_id=row['proveedorid'],
+                nombre=row['nombre'],
+                empresa=row['empresa'],
+                direccion=row['direccion'],
+                telefono=row['telefono']
+            )
+        return None

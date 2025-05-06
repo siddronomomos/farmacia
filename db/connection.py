@@ -133,6 +133,12 @@ class Connection:
             print(f"Error al crear tablas: {e}")
             self.con.rollback()
 
+    def _get_cursor(self):
+        """Obtiene un cursor de la conexión."""
+        if not self.con.is_connected():
+            self._initialize()
+        return self.con.cursor(dictionary=True)
+
     def close(self):
         try:
             if hasattr(self, 'cursor') and self.cursor:
@@ -150,3 +156,9 @@ class Connection:
 
     def rollback(self):
         self.con.rollback()
+
+    def fetch_all(self, query, params=None):
+        """Ejecuta una consulta y devuelve todas las filas."""
+        cursor = self._get_cursor()
+        cursor.execute(query, params or ())
+        return cursor.fetchall()

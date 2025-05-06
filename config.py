@@ -27,7 +27,7 @@ class Config:
         'fg': '#E0E0E0',
         'font': ('Segoe UI', 11),
         'button_bg': '#4CAF50',  # Verde farmacia
-        'button_fg': '#FFFFFF',
+        'button_fg': '#000000',
         'error': '#FF5252',
         'success': '#69F0AE',
         'warning': '#FFD740',
