@@ -4,25 +4,27 @@ from typing import Optional
 from models.cliente import Cliente
 from db.cliente_dao import ClienteDAO
 from views.base_form import BaseForm
+from models.user import User
 
 class ClienteForm(BaseForm):
-    def __init__(self, parent, user, cliente_id: Optional[int] = None):
+    def __init__(self, parent, user: User, cliente_id: Optional[int] = None):
         super().__init__(parent, "Gestión de Cliente", 400, 300)
-        self.user = user
+        self.user: User  = user
         self.dao = ClienteDAO()
         self.cliente = None
         self.cliente_id = cliente_id
         
         self._create_widgets()
         self._load_data()
-        self._setup_permissions()
+        self._setup_permissions()  # Añadimos esta línea
     
     def _setup_permissions(self):
         if self.user.perfil == 'cajero' and self.cliente_id:
-            self.nombre_entry.config(state='disabled')
-            self.telefono_entry.config(state='disabled')
-            self.rfc_entry.config(state='disabled')
+            self.nombre_entry.config(state='readonly')
+            self.telefono_entry.config(state='readonly')
+            self.rfc_entry.config(state='readonly')
             self.delete_btn.pack_forget()
+        
     
     def _create_widgets(self):
         main_frame = self.create_frame(self)

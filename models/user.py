@@ -16,8 +16,6 @@ class User:
             return False
         if len(self.user_name) < 3 or len(self.user_name) > 20:
             return False
-        if len(self.password) < 8 or len(self.password) > 20:
-            return False
         if self.perfil not in ["admin", "cajero", "gerente"]:
             return False
         return True

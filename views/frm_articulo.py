@@ -6,14 +6,28 @@ from db.articulo_dao import ArticuloDAO
 from views.base_form import BaseForm
 
 class ArticuloForm(BaseForm):
-    def __init__(self, parent, articulo_id: Optional[int] = None):
+    def __init__(self, parent, user, articulo_id: Optional[int] = None):
         super().__init__(parent, "Gestión de Artículo", 400, 300)
+        self.user = user
+        self._setup_permissions()  # Añadimos esta línea
         self.dao = ArticuloDAO()
         self.articulo = None
         self.articulo_id = articulo_id
         
         self._create_widgets()
         self._load_data()
+
+    def _setup_permissions(self):
+        # Solo admin y gerente pueden gestionar artículos
+        if self.user.perfil not in ['admin', 'gerente']:
+            self.destroy()
+            return
+        
+        # Si es cajero, solo lectura
+        if self.user.perfil == 'cajero':
+            self.descripcion_entry.config(state='readonly')
+            self.precio_entry.config(state='readonly')
+            self.delete_btn.pack_forget()
     
     def _create_widgets(self):
         main_frame = self.create_frame(self)

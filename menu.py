@@ -42,15 +42,13 @@ class MenuApp:
                 ("Artículos", self._open_articulos),
                 ("Ventas", self._open_ventas),
                 ("Descuentos", self._open_descuentos),
-                ("Compras", self._open_compras),
-                ("Reportes", self._open_reportes)
+                ("Compras", self._open_compras)
             ])
         elif self.user.perfil == 'gerente':
             buttons.extend([
                 ("Clientes", self._open_clientes),
                 ("Ventas", self._open_ventas),
-                ("Compras", self._open_compras),
-                ("Reportes", self._open_reportes)
+                ("Compras", self._open_compras)
             ])
         elif self.user.perfil == 'cajero':
             buttons.extend([
@@ -75,7 +73,7 @@ class MenuApp:
     
     def _open_users(self):
         from views.frm_user import UserForm
-        UserForm(self.root)
+        UserForm(self.root, self.user)
     
     def _open_clientes(self):
         from views.frm_cliente import ClienteForm
@@ -83,11 +81,11 @@ class MenuApp:
     
     def _open_proveedores(self):
         from views.frm_proveedor import ProveedorForm
-        ProveedorForm(self.root)
+        ProveedorForm(self.root, self.user)
     
     def _open_articulos(self):
         from views.frm_articulo import ArticuloForm
-        ArticuloForm(self.root)
+        ArticuloForm(self.root, self.user)
     
     def _open_ventas(self):
         from views.frm_venta import VentaForm
@@ -99,11 +97,7 @@ class MenuApp:
     
     def _open_descuentos(self):
         from views.frm_descuento import DescuentoForm
-        DescuentoForm(self.root)
-    
-    def _open_reportes(self):
-        from views.frm_reporte import ReporteForm
-        ReporteForm(self.root)
+        DescuentoForm(self.root, self.user)
     
     def _logout(self):
         self.root.destroy()

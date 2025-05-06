@@ -7,8 +7,10 @@ from db.proveedor_dao import ProveedorDAO
 from views.base_form import BaseForm
 
 class ProveedorForm(BaseForm):
-    def __init__(self, parent, proveedor_id: Optional[int] = None):
+    def __init__(self, parent, user, proveedor_id: Optional[int] = None):
         super().__init__(parent, "Gestión de Proveedor", 500, 350)
+        self.user = user
+        self._setup_permissions() 
         self.dao = ProveedorDAO()
         self.proveedor = None
         self.proveedor_id = proveedor_id
@@ -16,6 +18,20 @@ class ProveedorForm(BaseForm):
         self._create_widgets()
         self._load_data()
     
+    def _setup_permissions(self):
+        # Solo admin puede gestionar proveedores
+        if self.user.perfil != 'admin':
+            self.destroy()
+            return
+        
+        # Si es gerente o cajero, solo lectura
+        if self.user.perfil in ['gerente', 'cajero'] and self.proveedor_id:
+            self.nombre_entry.config(state='readonly')
+            self.empresa_entry.config(state='readonly')
+            self.telefono_entry.config(state='readonly')
+            self.direccion_entry.config(state='readonly')
+            self.delete_btn.pack_forget()
+
     def _create_widgets(self):
         main_frame = self.create_frame(self)
         main_frame.columnconfigure(1, weight=1)

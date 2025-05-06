@@ -34,8 +34,9 @@ class Connection:
             CREATE TABLE IF NOT EXISTS usuarios (
                 usuarioid INT AUTO_INCREMENT PRIMARY KEY,
                 nombre VARCHAR(50) NOT NULL,
+                user_name VARCHAR(50) NOT NULL UNIQUE,
                 password VARCHAR(100) NOT NULL,
-                perfil ENUM('admin', 'vendedor') NOT NULL
+                perfil ENUM('admin', 'cajero', 'gerente') NOT NULL
             )
             """,
             """
@@ -133,15 +134,19 @@ class Connection:
             self.con.rollback()
 
     def close(self):
-        if hasattr(self, 'con') and self.con.is_connected():
-            self.cursor.close()
-            self.con.close()
+        try:
+            if hasattr(self, 'cursor') and self.cursor:
+                self.cursor.close()
+        except Exception:
+            pass
+        try:
+            if hasattr(self, 'con') and self.con and self.con.is_connected():
+                self.con.close()
+        except Exception:
+            pass
 
     def commit(self):
         self.con.commit()
 
     def rollback(self):
         self.con.rollback()
-
-    def __del__(self):
-        self.close()

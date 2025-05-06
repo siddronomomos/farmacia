@@ -13,6 +13,7 @@ class CompraForm(BaseForm):
     def __init__(self, parent, user: User, folio: Optional[int] = None):
         super().__init__(parent, "Registro de Compra", 700, 500)
         self.user = user
+        self._setup_permissions()
         self.compra_dao = CompraDAO()
         self.proveedor_dao = ProveedorDAO()
         self.articulo_dao = ArticuloDAO()
@@ -23,6 +24,21 @@ class CompraForm(BaseForm):
         self._create_widgets()
         self._load_proveedores()
         self._load_data()
+    
+    def _setup_permissions(self):
+        # Solo gerente y admin pueden gestionar compras
+        if self.user.perfil not in ['gerente', 'admin']:
+            self.destroy()  # Cerrar el form si no tiene permisos
+            return
+        
+        # Si es una compra existente, configurar permisos de edición
+        if self.folio:
+            self._setup_edit_permissions()
+    
+    def _setup_edit_permissions(self):
+        """Configura permisos para edición"""
+        # Todos los campos editables para gerente/admin
+        pass  # No necesitamos cambios adicionales
     
     def _create_widgets(self):
         main_frame = self.create_frame(self)

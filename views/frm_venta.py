@@ -15,6 +15,7 @@ class VentaForm(BaseForm):
     def __init__(self, parent, user: User):
         super().__init__(parent, "Registro de Venta", 800, 600)
         self.user = user
+        self._setup_permissions()
         self.venta_dao = VentaDAO()
         self.cliente_dao = ClienteDAO()
         self.articulo_dao = ArticuloDAO()
@@ -31,6 +32,28 @@ class VentaForm(BaseForm):
         self._create_widgets()
         self._load_proveedores()
         self._update_totales()
+    
+    def _setup_permissions(self):
+        # Solo gerente puede cancelar ventas
+        if self.user.perfil != 'gerente':
+            self.cancel_btn.pack_forget()  # Ocultar botón de cancelación
+        
+        # Cajero solo puede crear/ver ventas
+        if self.user.perfil == 'cajero':
+            # Deshabilitar edición de campos si es una venta existente
+            if hasattr(self, 'venta_id') and self.venta_id:
+                self._disable_edition()
+    
+    def _disable_edition(self):
+        """Deshabilita la edición para usuarios con permisos limitados"""
+        self.cliente_search.config(state='disabled')
+        self.proveedor_combo.config(state='disabled')
+        self.articulo_combo.config(state='disabled')
+        self.cantidad_entry.config(state='disabled')
+        self.agregar_btn.config(state='disabled')
+        self.quitar_btn.config(state='disabled')
+        self.limpiar_btn.config(state='disabled')
+        self.descuento_combo.config(state='disabled')
     
     def _create_widgets(self):
         main_frame = self.create_frame(self)
@@ -71,11 +94,12 @@ class VentaForm(BaseForm):
         self.cantidad_entry.pack(side='left', padx=5)
         self.cantidad_entry.insert(0, "1")
         
-        ttk.Button(
+        self.agregar_btn = ttk.Button(
             articulo_frame, 
             text="Agregar", 
             command=self._agregar_articulo
-        ).pack(side='left', padx=5)
+        )
+        self.agregar_btn.pack(side='left', padx=5)
         
         # Lista de artículos agregados
         self.articulos_listbox = tk.Listbox(main_frame, height=10)
@@ -89,17 +113,19 @@ class VentaForm(BaseForm):
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=4, column=0, columnspan=3, sticky='ew', pady=5)
         
-        ttk.Button(
+        self.quitar_btn = ttk.Button(
             button_frame, 
             text="Quitar Artículo", 
             command=self._quitar_articulo
-        ).pack(side='left', padx=5)
+        )
+        self.quitar_btn.pack(side='left', padx=5)
         
-        ttk.Button(
+        self.limpiar_btn = ttk.Button(
             button_frame, 
             text="Limpiar Lista", 
             command=self._limpiar_lista
-        ).pack(side='left', padx=5)
+        )
+        self.limpiar_btn.pack(side='left', padx=5)
         
         # Frame de totales y descuentos
         total_frame = ttk.Frame(main_frame)
