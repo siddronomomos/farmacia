@@ -1,3 +1,4 @@
+# config.py (farmacia)
 import os
 from tkinter import ttk
 from dotenv import load_dotenv
@@ -18,20 +19,20 @@ class Config:
     DB_HOST = os.getenv('DB_HOST', 'localhost')
     DB_USER = os.getenv('DB_USER', 'root')
     DB_PASSWORD = os.getenv('DB_PASSWORD', '')
-    DB_NAME = os.getenv('DB_NAME', 'farmacia')
-    APP_TITLE = "farmacia"
+    DB_NAME = os.getenv('DB_NAME', 'farmacia_db')
+    APP_TITLE = "Sistema de Farmacia"
     
     THEME: ThemeConfig = {
-        'bg': '#1E1E1E',          # Fondo oscuro
-        'fg': '#E0E0E0',          # Texto claro
+        'bg': '#1E1E1E',
+        'fg': '#E0E0E0',
         'font': ('Segoe UI', 11),
-        'button_bg': '#7C4DFF',   # Morado vibrante
-        'button_fg': '#555555',   # Texto blanco
-        'error': '#FF5252',       # Rojo claro
-        'success': '#69F0AE',     # Verde menta
-        'warning': '#FFD740',     # Amarillo ámbar
-        'accent': '#448AFF',      # Azul brillante (para resaltar elementos)
-        'border': '#424242',      # Bordes sutiles
+        'button_bg': '#4CAF50',  # Verde farmacia
+        'button_fg': '#FFFFFF',
+        'error': '#FF5252',
+        'success': '#69F0AE',
+        'warning': '#FFD740',
+        'accent': '#8BC34A',     # Verde claro
+        'border': '#424242',
     }
     
     @staticmethod
